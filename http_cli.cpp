@@ -73,6 +73,9 @@ hostname_path_port parse(string url){
     if(port != -1){
         hostname_end_pos = port_start_pos - 2;
     }
+    if(hostname_end_pos >= 0 && hostname_end_pos < (int)url.length() && url[hostname_end_pos] == '/'){
+        hostname_end_pos --;
+    }
     string hostname = url.substr(hostname_start_pos, hostname_end_pos - hostname_start_pos + 1);
 
     hostname_path_port res;
