@@ -157,7 +157,7 @@ int main(int argc, char* argv[]){
     reqs << "COnnection: close" << DELIMITER;
     reqs << DELIMITER;
 
-    cerr << "request data: " << reqs.str() << endl;
+    cerr << reqs.str() << endl;
     if(send_msg(sockFD, reqs.str()) == -1){
         cerr << "send data to server failed" << endl;
         return EXIT_FAILURE;
@@ -186,8 +186,17 @@ int main(int argc, char* argv[]){
     string startLine = resp.substr(0, (pos = resp.find(DELIMITER)));
     resp.erase(0, pos + DELIMITER.length());
     // 2. parse head lines
+    int body_len = -1;
+    string body_len_header = "Content-Length:";
     while((pos = resp.find(DELIMITER)) != string::npos){
         string token = resp.substr(0, pos);
+        if(token.compare(0, body_len_header.length(), body_len_header) == 0){
+            try{
+                body_len = stoi(token.substr(body_len_header.length()));
+            } catch (...){
+                cerr << "invalid content-length" << endl;
+            }
+        }
         resp.erase(0, pos + DELIMITER.length());
         if(token.length() == 0){
             break;
@@ -195,6 +204,13 @@ int main(int argc, char* argv[]){
         cerr << token << endl;
     }
     // 3. parse body
-    cout << resp << endl;
+    //cout << body_len << endl;
+    if(body_len == -1){// didn't get body_len from header lines
+        cout << resp;
+    } else { // read body_len bytes exactly
+        for(int i = 0; i < body_len; i ++){
+            cout << resp[i];
+        }
+    }
     return 0;
 }
