@@ -133,12 +133,12 @@ int main(int argc, char* argv[]){
 
     for(it = addrs; it != NULL; it = it->ai_next){
         if((sockFD = socket(it->ai_family, it->ai_socktype, it->ai_protocol)) == -1){
-            cout << "fail to create socket, " << gai_strerror(sockFD) << endl;
+            cerr << "fail to create socket, " << gai_strerror(sockFD) << endl;
             continue;
         }
         if((error = connect(sockFD, it->ai_addr, it->ai_addrlen)) == -1){
             close(sockFD);
-            cout << "fail to connect, " << gai_strerror(error) << endl;
+            cerr << "fail to connect, " << gai_strerror(error) << endl;
             continue;
         }
         //successfully
@@ -146,7 +146,7 @@ int main(int argc, char* argv[]){
     }
 
     if(it == NULL){
-        cout << "fail to connect to the server[" << hostname << "]" << endl;
+        cerr << "fail to connect to the server[" << hostname << "]" << endl;
         return EXIT_FAILURE;
     }
 
