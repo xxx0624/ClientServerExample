@@ -15,6 +15,7 @@ using namespace std;
 
 typedef pair<string, string> hostname_path;
 typedef pair<hostname_path, int> hostname_path_port;
+const string DELIMITER = "\r\n";
 
 hostname_path_port parse(string url){
     // extract http part
@@ -151,18 +152,19 @@ int main(int argc, char* argv[]){
 
     // prepare the request
     stringstream reqs;
-    reqs << "GET " << path << " " << "HTTP/1.1\r\n";
-    reqs << "Host: " << hostname << "\r\n";
-    reqs << "COnnection: close" << "\r\n";
-    reqs << "\r\n";
+    reqs << "GET " << path << " " << "HTTP/1.1" << DELIMITER;
+    reqs << "Host: " << hostname << DELIMITER;
+    reqs << "COnnection: close" << DELIMITER;
+    reqs << DELIMITER;
 
+    cerr << "request data: " << reqs.str() << endl;
     if(send_msg(sockFD, reqs.str()) == -1){
         cerr << "send data to server failed" << endl;
         return EXIT_FAILURE;
     }
 
     char buffer[100];
-    stringstream resp;
+    stringstream resps;
     while(true){
         int size = recv(sockFD, buffer, 100, 0);
         if(size == -1){
@@ -172,11 +174,27 @@ int main(int argc, char* argv[]){
         if(size == 0){
             break;
         }
-        resp << buffer;
+        resps << buffer;
         memset(buffer, 0, sizeof(buffer));
     }
 
-    cout << resp.str() << endl;
-
+    //cout << resps.str() << endl;
+    string resp = resps.str();
+    size_t pos;
+    // parse response
+    // 1. parse start line
+    string startLine = resp.substr(0, (pos = resp.find(DELIMITER)));
+    resp.erase(0, pos + DELIMITER.length());
+    // 2. parse head lines
+    while((pos = resp.find(DELIMITER)) != string::npos){
+        string token = resp.substr(0, pos);
+        resp.erase(0, pos + DELIMITER.length());
+        if(token.length() == 0){
+            break;
+        }
+        cerr << token << endl;
+    }
+    // 3. parse body
+    cout << resp << endl;
     return 0;
 }
