@@ -173,20 +173,6 @@ int main(int argc, char* argv[]){
     }
 
     char buffer[100];
-    stringstream resps;
-    while(true){
-        int size = recv(sockFD, buffer, 100, 0);
-        if(size == -1){
-            cerr << "recv data failed" << endl;
-            return EXIT_FAILURE;
-        }
-        if(size == 0){
-            break;
-        }
-        resps << buffer;
-        memset(buffer, 0, sizeof(buffer));
-    }
-
     int resp_cap = 1000, resp_len = 0;
     char *resp = new char[resp_cap];
     while(true){
@@ -210,10 +196,7 @@ int main(int argc, char* argv[]){
         memcpy(&resp[resp_len], buffer, size);
         memset(buffer, 0, sizeof(buffer));
         resp_len += size;
-        cout << size << endl;
     }
-
-    cerr << "total got chars number is = " << resp_len << endl;
 
     // parse start line
     int start_line_pos = find_delimiter(resp, resp_len, 0);
@@ -241,12 +224,15 @@ int main(int argc, char* argv[]){
         cerr << header_line << endl;
         start_line_pos = head_line_pos + 2;
     }
+    // parse body
     char* body = new char[resp_len - start_line_pos];
-    cout << "body size:" << resp_len - start_line_pos << endl;
     memcpy(body, resp + start_line_pos, resp_len - start_line_pos);
-    FILE* image = fopen("capture.jpg", "w");
-    fwrite(body,1,resp_len - start_line_pos, image);
-    fclose(image);
+    for(int i = 0; i < (int)sizeof(body); i ++)
+        body[i] = (unsigned char)body[i];
+    cout << body;
+    // FILE* image = fopen("capture.jpg", "w");
+    // fwrite(body,1,resp_len - start_line_pos, image);
+    // fclose(image);
 
 
 //     //cout << resps.str() << endl;
