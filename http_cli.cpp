@@ -106,6 +106,15 @@ int send_msg(int sockFD, string msg){
     return 0;
 }
 
+int find_delimiter(char* s, int len, int start_pos){
+    for(int i = start_pos; i < len - 1; i ++){
+        if(s[i] == '\r' && s[i + 1] == '\n'){
+            return i;
+        }
+    }
+    return -1;
+}
+
 int main(int argc, char* argv[]){
     if(argc != 2){
         cerr << "Usage:./http_cli URL" << endl;
@@ -154,7 +163,7 @@ int main(int argc, char* argv[]){
     stringstream reqs;
     reqs << "GET " << path << " " << "HTTP/1.1" << DELIMITER;
     reqs << "Host: " << hostname << DELIMITER;
-    reqs << "COnnection: close" << DELIMITER;
+    reqs << "Connection: close" << DELIMITER;
     reqs << DELIMITER;
 
     cerr << reqs.str() << endl;
@@ -178,39 +187,106 @@ int main(int argc, char* argv[]){
         memset(buffer, 0, sizeof(buffer));
     }
 
-    //cout << resps.str() << endl;
-    string resp = resps.str();
-    size_t pos;
-    // parse response
-    // 1. parse start line
-    string startLine = resp.substr(0, (pos = resp.find(DELIMITER)));
-    resp.erase(0, pos + DELIMITER.length());
-    // 2. parse head lines
-    int body_len = -1;
-    string body_len_header = "Content-Length:";
-    while((pos = resp.find(DELIMITER)) != string::npos){
-        string token = resp.substr(0, pos);
-        if(token.compare(0, body_len_header.length(), body_len_header) == 0){
-            try{
-                body_len = stoi(token.substr(body_len_header.length()));
-            } catch (...){
-                cerr << "invalid content-length" << endl;
-            }
+    int resp_cap = 1000, resp_len = 0;
+    char *resp = new char[resp_cap];
+    while(true){
+        int size = recv(sockFD, buffer, 100, 0);
+        if(size == -1){
+            cerr << "recv data failed" << endl;
+            return EXIT_FAILURE;
         }
-        resp.erase(0, pos + DELIMITER.length());
-        if(token.length() == 0){
+        if(size == 0){
             break;
         }
-        cerr << token << endl;
-    }
-    // 3. parse body
-    //cout << body_len << endl;
-    if(body_len == -1){// didn't get body_len from header lines
-        cout << resp;
-    } else { // read body_len bytes exactly
-        for(int i = 0; i < body_len; i ++){
-            cout << resp[i];
+        if(size > (resp_cap - resp_len)){
+            int new_resp_cap = resp_cap + 1000;
+            char* new_resp = new char[new_resp_cap];
+            memset(new_resp, 0, new_resp_cap);
+            memcpy(new_resp, resp, resp_len);
+            delete[] resp;
+            resp = new_resp;
+            resp_cap = new_resp_cap;
         }
+        memcpy(&resp[resp_len], buffer, size);
+        memset(buffer, 0, sizeof(buffer));
+        resp_len += size;
+        cout << size << endl;
     }
+
+    cerr << "total got chars number is = " << resp_len << endl;
+
+    // parse start line
+    int start_line_pos = find_delimiter(resp, resp_len, 0);
+    if(start_line_pos == -1){
+        return EXIT_FAILURE;
+    }
+    char* start_line = new char[start_line_pos + 1];
+    memcpy(start_line, resp, start_line_pos);
+    start_line[start_line_pos] = '\0';
+    cerr << start_line << endl;
+    start_line_pos += 2;
+    // parse header line
+    int head_line_pos;
+    while((head_line_pos = find_delimiter(resp, resp_len, start_line_pos)) != -1){
+        if(head_line_pos == -1){
+            return EXIT_FAILURE;
+        }
+        if(head_line_pos == start_line_pos){
+            start_line_pos += 2;
+            break;
+        }
+        char* header_line = new char[head_line_pos - start_line_pos + 1];
+        memcpy(header_line, resp + start_line_pos, head_line_pos - start_line_pos);
+        header_line[head_line_pos - start_line_pos] = '\0';
+        cerr << header_line << endl;
+        start_line_pos = head_line_pos + 2;
+    }
+    char* body = new char[resp_len - start_line_pos];
+    cout << "body size:" << resp_len - start_line_pos << endl;
+    memcpy(body, resp + start_line_pos, resp_len - start_line_pos);
+    FILE* image = fopen("capture.jpg", "w");
+    fwrite(body,1,resp_len - start_line_pos, image);
+    fclose(image);
+
+
+//     //cout << resps.str() << endl;
+//     string resp = resps.str();
+//     cout << "tot:" << tot << endl;
+//     size_t pos;
+//     // parse response
+//     // 1. parse start line
+//     string startLine = resp.substr(0, (pos = resp.find(DELIMITER)));
+//     resp.erase(0, pos + DELIMITER.length());
+//     // 2. parse head lines
+//     int body_len = -1;
+//     string body_len_header = "Content-Length:";
+//     while((pos = resp.find(DELIMITER)) != string::npos){
+//         string token = resp.substr(0, pos);
+//         if(token.compare(0, body_len_header.length(), body_len_header) == 0){
+//             try{
+//                 body_len = stoi(token.substr(body_len_header.length()));
+//             } catch (...){
+//                 cerr << "invalid content-length" << endl;
+//             }
+//         }
+//         resp.erase(0, pos + DELIMITER.length());
+//         if(token.length() == 0){
+//             break;
+//         }
+//         cerr << token << endl;
+//     }
+//     // 3. parse body
+//     //cout << body_len << endl;
+//     if(body_len == -1){// didn't get body_len from header lines
+//         cout << resp;
+//     } else { // read body_len bytes exactly
+//         // cout << body_len << endl;
+//         // cout << "new:" << resp.length() << endl;
+//         // cout << strlen(resp.substr(0, body_len).c_str()) << endl;
+//         //cout << resp.substr(0, body_len).c_str();
+// FILE* image = fopen("capture2.jpg", "w");
+//     fwrite(resp.substr(0, body_len).c_str(),1,body_len, image);
+//     fclose(image);
+//     }
     return 0;
 }
