@@ -228,46 +228,5 @@ int main(int argc, char* argv[]){
     char* body = new char[resp_len - start_line_pos];
     memcpy(body, resp + start_line_pos, resp_len - start_line_pos);
     cout.write(body, resp_len - start_line_pos);
-
-
-//     //cout << resps.str() << endl;
-//     string resp = resps.str();
-//     cout << "tot:" << tot << endl;
-//     size_t pos;
-//     // parse response
-//     // 1. parse start line
-//     string startLine = resp.substr(0, (pos = resp.find(DELIMITER)));
-//     resp.erase(0, pos + DELIMITER.length());
-//     // 2. parse head lines
-//     int body_len = -1;
-//     string body_len_header = "Content-Length:";
-//     while((pos = resp.find(DELIMITER)) != string::npos){
-//         string token = resp.substr(0, pos);
-//         if(token.compare(0, body_len_header.length(), body_len_header) == 0){
-//             try{
-//                 body_len = stoi(token.substr(body_len_header.length()));
-//             } catch (...){
-//                 cerr << "invalid content-length" << endl;
-//             }
-//         }
-//         resp.erase(0, pos + DELIMITER.length());
-//         if(token.length() == 0){
-//             break;
-//         }
-//         cerr << token << endl;
-//     }
-//     // 3. parse body
-//     //cout << body_len << endl;
-//     if(body_len == -1){// didn't get body_len from header lines
-//         cout << resp;
-//     } else { // read body_len bytes exactly
-//         // cout << body_len << endl;
-//         // cout << "new:" << resp.length() << endl;
-//         // cout << strlen(resp.substr(0, body_len).c_str()) << endl;
-//         //cout << resp.substr(0, body_len).c_str();
-// FILE* image = fopen("capture2.jpg", "w");
-//     fwrite(resp.substr(0, body_len).c_str(),1,body_len, image);
-//     fclose(image);
-//     }
     return 0;
 }
