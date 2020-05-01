@@ -25,7 +25,7 @@ hostname_path_port parse(string url){
         hostname_start_pos = 7;
     }
     string https_str = url.substr(0, 8); // 8 is for "https://"
-    if(http_str.compare("https://") == 0){
+    if(https_str.compare("https://") == 0){
         hostname_start_pos = 8;
     }
     // extract port if it exists
