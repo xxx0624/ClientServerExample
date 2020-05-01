@@ -1,2 +1,5 @@
 *dSYM/
+*.jpg
+*.html
+*.txt
 http_cli
