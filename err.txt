@@ -1,0 +1,14 @@
+GET /~remzi/OSTEP/book-cover-two.jpg HTTP/1.1
+Host: pages.cs.wisc.edu
+Connection: close
+
+
+HTTP/1.1 200 OK
+Date: Fri, 01 May 2020 02:08:11 GMT
+Server: Apache
+Last-Modified: Sun, 19 Jan 2014 16:13:18 GMT
+ETag: "757af5e0-1ddc3-4f0550d9b2380"
+Accept-Ranges: bytes
+Content-Length: 122307
+Connection: close
+Content-Type: image/jpeg

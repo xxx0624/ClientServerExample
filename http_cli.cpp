@@ -227,12 +227,7 @@ int main(int argc, char* argv[]){
     // parse body
     char* body = new char[resp_len - start_line_pos];
     memcpy(body, resp + start_line_pos, resp_len - start_line_pos);
-    for(int i = 0; i < (int)sizeof(body); i ++)
-        body[i] = (unsigned char)body[i];
-    cout << body;
-    // FILE* image = fopen("capture.jpg", "w");
-    // fwrite(body,1,resp_len - start_line_pos, image);
-    // fclose(image);
+    cout.write(body, resp_len - start_line_pos);
 
 
 //     //cout << resps.str() << endl;
